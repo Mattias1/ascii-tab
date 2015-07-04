@@ -19,12 +19,10 @@ with open(filename) as f:
             lines.append(line)
 assert len(lines) % 6 == 0
 
-# Initialize all the variables used in a note (except pitch)
+# Initialize the MIDIFile object (with 1 track)
 time = 0
 duration = 10
 volume = 100
-
-# Create the MIDIFile Object with 1 track
 song = MIDIFile(1)
 song.addTrackName(0, time, "pianized_guitar_tab.")
 song.addTempo(0, time, beats_per_minute)
@@ -32,38 +30,44 @@ song.addTempo(0, time, beats_per_minute)
 # The root-pitches of the guitar
 guitar = list(reversed([52, 57, 62, 67, 71, 76])) # Assume EADGBe tuning
 def add_note(string, fret):
-    song.addNote(0, string, guitar[i] + fret, time, duration, volume)
+    song.addNote(0, string, guitar[string] + fret, time, duration, volume)
 
 # Process the entire tab
-for currentline in range(0, len(lines), 6):
-    for chars in zip(*lines[currentline : currentline + 6]):
+for current in range(0, len(lines), 6):  # The current base string
+    for i in range(len(lines[current])): # The position in the current string
         time += 1
-        for i, c in enumerate(chars):
+        for s in range(6):               # The number of the string
+            c = lines[current + s][i]
+            try: next_char = lines[current + s][i + 1]
+            except: next_char = ''
             if c in '-x\\/bhp':
                 # Ignore these characters for now
                 continue
             elif c.isdigit():
+                # Special case for fret 10 and higher
+                if next_char.isdigit():
+                    c += next_char
+                    lines[current + s] = lines[current + s][:i+1] + '-' + lines[current + s][i+2:]
                 # It's a note, play it!
-                add_note(i, int(c))
+                add_note(s, int(c))
             else:
                 # Awww
                 time -= 1
                 break
 
 # And write it to disk.
-try:
+def save():
     binfile = open('song.mid', 'wb')
     song.writeFile(binfile)
     binfile.close()
     print('Done')
+try:
+    save()
 except:
     print('Error writing to song.mid, try again.')
     input()
     try:
-        binfile = open('song.mid', 'wb')
-        song.writeFile(binfile)
-        binfile.close()
-        print('Done')
+        save()
     except:
         print('Failed!')
 
