@@ -3,7 +3,7 @@ import sys
 
 # Read the relevant lines of the file
 lines = []
-if False:
+if len(sys.argv) > 1:
     filename = sys.argv[1]
 else:
     filename = 'mattys-tune.txt'
